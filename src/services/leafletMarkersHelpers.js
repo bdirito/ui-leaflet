@@ -98,6 +98,7 @@ angular.module('ui-leaflet').service('leafletMarkersHelpers', function ($rootSco
             return new L.Icon.Default({
                 iconUrl: base64icon,
                 shadowUrl: base64shadow,
+                imagePath: ' ',
                 iconSize: [25, 41],
                 iconAnchor: [12, 41],
                 popupAnchor: [1, -34],
@@ -187,6 +188,7 @@ angular.module('ui-leaflet').service('leafletMarkersHelpers', function ($rootSco
         //We need to keep trying until angular has compiled before we _updateLayout and _updatePosition
         //This should take care of any scenario , eg ngincludes, whatever.
         //Is there a better way to check for this?
+
         var innerText = marker._popup._contentNode.innerText || marker._popup._contentNode.textContent;
         if (innerText.length < 1) {
             $timeout(function () {
@@ -220,8 +222,10 @@ angular.module('ui-leaflet').service('leafletMarkersHelpers', function ($rootSco
                 return false;
             }
 
-            compilePopup(marker, markerScope);
-            updatePopup(marker, markerData, map);
+            $timeout(function() {
+                compilePopup(marker, markerScope);
+                updatePopup(marker, markerData, map);
+            });
         }
     };
 
@@ -231,7 +235,7 @@ angular.module('ui-leaflet').service('leafletMarkersHelpers', function ($rootSco
             labelScope = angular.isFunction(markerData.getLabelScope) ? markerData.getLabelScope() : markerScope,
             compileMessage = isDefined(markerData.compileMessage) ? markerData.compileMessage : true;
 
-        if (Helpers.LabelPlugin.isLoaded() && isDefined(markerData.label)) {
+        if (isDefined(markerData.label)) {
             if (isDefined(markerData.label.options) && markerData.label.options.noHide === true) {
                 marker.showLabel();
             }
@@ -379,23 +383,22 @@ angular.module('ui-leaflet').service('leafletMarkersHelpers', function ($rootSco
                 marker.unbindPopup();
             }
 
-            // Update the label content or bind a new label if the old one has been removed.
-            if (Helpers.LabelPlugin.isLoaded()) {
-                if (isDefined(markerData.label) && isDefined(markerData.label.message)) {
-                    if ('label' in oldMarkerData && 'message' in oldMarkerData.label && !angular.equals(markerData.label.message, oldMarkerData.label.message)) {
-                        marker.updateLabelContent(markerData.label.message);
-                    } else if (!angular.isFunction(marker.getLabel) || angular.isFunction(marker.getLabel) && !isDefined(marker.getLabel())) {
-                        marker.bindLabel(markerData.label.message, markerData.label.options);
-                        _manageOpenLabel(marker, markerData);
-                    } else {
-                        _manageOpenLabel(marker, markerData);
-                    }
-                } else if (!('label' in markerData && !('message' in markerData.label))) {
-                    if (angular.isFunction(marker.unbindLabel)) {
-                        marker.unbindLabel();
-                    }
+
+            if (isDefined(markerData.label) && isDefined(markerData.label.message)) {
+                if ('label' in oldMarkerData && 'message' in oldMarkerData.label && !angular.equals(markerData.label.message, oldMarkerData.label.message)) {
+                    marker.setTooltipContent(markerData.label.message);
+                } else if (!angular.isFunction(marker.getLabel) || angular.isFunction(marker.getLabel) && !isDefined(marker.getLabel())) {
+                    marker.bindTooltip(markerData.label.message, markerData.label.options);
+                    _manageOpenLabel(marker, markerData);
+                } else {
+                    _manageOpenLabel(marker, markerData);
+                }
+            } else if (!('label' in markerData && !('message' in markerData.label))) {
+                if (angular.isFunction(marker.unbindTooltip)) {
+                    marker.unbindTooltip();
                 }
             }
+
 
             // There is some text in the popup, so we must show the text or update existing
             if (isString(markerData.message) && !isString(oldMarkerData.message)) {

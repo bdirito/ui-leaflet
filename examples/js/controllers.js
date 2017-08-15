@@ -1904,42 +1904,32 @@ var app = angular.module('webapp');
                 },
             });
         }]);
-        app.controller("LayersHeatmapController", ["$scope", "$http", function($scope, $http) {
-            var points = [];
-            var heatmap = {
-                name: 'Heat Map',
-                type: 'heat',
-                data: points,
-                visible: true
-            };
-            $http.get("json/heat-points.json").success(function(data) {
-                $scope.layers.overlays = {
-                    heat: {
-                        name: 'Heat Map',
-                        type: 'heat',
-                        data: data,
-                        layerOptions: {
-                            radius: 20,
-                            blur: 10
-                        },
-                        visible: true
-                    }
-                };
-            });
+        app.controller("LayersHeatmapController", [ "$scope", function($scope) {
+            var dataPoints = [
+                [50.5, 30.5, 0.2], // lat, lng, intensity
+                [50.6, 30.4, 0.5],
+                [44.651144316,-63.586260171, 0.5],
+                [44.75, -63.5, 0.8] ];
             angular.extend($scope, {
                 center: {
-                    lat: 37.774546,
-                    lng: -122.433523,
+                    lat: -37.87,
+                    lng: 175.475,
                     zoom: 12
                 },
                 layers: {
                     baselayers: {
-                        mapbox_light: {
-                            name: 'Mapbox Light',
-                            type: 'mapbox',
-                            user: 'elesdoar',
-                            key: 'citojtj9e00022iqjmdzhrdwd',
-                            apiKey: 'pk.eyJ1IjoiZWxlc2RvYXIiLCJhIjoiY2l0bmcwaDNpMDQzMTJvbDRpaTltN2dlbiJ9.KDnhRVh9St6vpQovMI7iLg'
+                        osm: {
+                            name: 'OpenStreetMap',
+                            url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            type: 'xyz'
+                        }
+                    },
+                    overlays: {
+                        heatmap: {
+                            name: 'Heat Map',
+                            type: 'heat',
+                            data: addressPoints.map(function (p) { return [p[0], p[1]]; }),
+                            visible: true
                         }
                     }
                 }
@@ -2527,7 +2517,7 @@ var app = angular.module('webapp');
                             [ markers.London, markers.Lincoln ],
                             [ markers.Manchester, markers.Worcester]
                         ],
-                        type: 'multiPolyline',
+                        type: 'polyline',
                         layer: 'lines'
                     },
                     c1: {
@@ -2560,7 +2550,7 @@ var app = angular.module('webapp');
                             [ markers.London, markers.Worcester, markers.Northhampton ],
                             [ markers.Manchester, markers.Lincoln, markers.York ]
                         ],
-                        type: 'multiPolygon',
+                        type: 'polygon',
                         layer: 'shapes'
                     },
                     r1: {
@@ -2709,35 +2699,6 @@ var app = angular.module('webapp');
             $scope.$on('leafletDirectiveMap.utfgridMouseout', function(event, leafletEvent) {
                 $scope.interactivity = "";
                 $scope.flag = "";
-            });
-        }]);
-        app.controller("LayersWebGLHeatmapController", [ "$scope", function($scope) {
-            var dataPoints = [
-                [44.651144316,-63.586260171, 0.5],
-                [44.75, -63.5, 0.8] ];
-            angular.extend($scope, {
-                center: {
-                    lat: 44.8091,
-                    lng: -63.3636,
-                    zoom: 9
-                },
-                layers: {
-                    baselayers: {
-                        osm: {
-                            name: 'OpenStreetMap',
-                            url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            type: 'xyz'
-                        }
-                    },
-                    overlays: {
-                        heatmap: {
-                            name: 'Heat Map',
-                            type: 'webGLHeatmap',
-                            data: dataPoints,
-                            visible: true
-                        }
-                    }
-                }
             });
         }]);
         // For more info take a look at https://github.com/kartena/Proj4Leaflet proj4leaflet.js
@@ -3114,7 +3075,8 @@ var app = angular.module('webapp');
             }
             $scope.addMarkers();
         } ]);
-        app.controller('MarkersAngularTemplateController', [ '$scope', function($scope) {
+        app.controller('MarkersAngularTemplateController', [ '$scope', 'leafletLogger', function($scope, leafletLogger) {
+            leafletLogger.currentLevel = leafletLogger.LEVELS.debug
             angular.extend($scope, {
                 london: {
                     lat: 51.505,
@@ -4862,7 +4824,7 @@ var app = angular.module('webapp');
 	                            [ $scope.markers.London, $scope.markers.Lincoln ],
                                 [ $scope.markers.Manchester, $scope.markers.Worcester]
                             ],
-	                        type: 'multiPolyline'
+	                        type: 'polyline'
                         },
 	                    c1: {
 		                    weight: 2,
@@ -4891,7 +4853,7 @@ var app = angular.module('webapp');
 	                            [ $scope.markers.London, $scope.markers.Worcester, $scope.markers.Northhampton ],
                                 [ $scope.markers.Manchester, $scope.markers.Lincoln, $scope.markers.York ]
                             ],
-		                    type: 'multiPolygon'
+		                    type: 'polygon'
 	                    },
 	                    r1: {
 		                    latlngs: [ $scope.markers.Lincoln, $scope.markers.York ],
@@ -5065,7 +5027,7 @@ var app = angular.module('webapp');
                     latlngs: [ europeCapitals.London, europeCapitals.Madrid, europeCapitals.Rome ]
                 },
                 multiPolyline: {
-                    type: "multiPolyline",
+                    type: "polyline",
                     latlngs: [
                         [ europeCapitals.London, europeCapitals.Lisbon ],
                         [ europeCapitals.Paris, europeCapitals.Madrid ],
@@ -5077,7 +5039,7 @@ var app = angular.module('webapp');
                    latlngs: [ europeCapitals.London, europeCapitals.Lisbon , europeCapitals.Madrid, europeCapitals.Paris ]
                 },
                 multiPolygon: {
-                    type: "multiPolygon",
+                    type: "polygon",
                     latlngs: [
                                 [ europeCapitals.London, europeCapitals.Lisbon , europeCapitals.Madrid, europeCapitals.Paris ],
                                 [ europeCapitals.Berlin, europeCapitals.Rome, europeCapitals.Brussels ]

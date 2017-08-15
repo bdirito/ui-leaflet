@@ -2,8 +2,8 @@ var centerDirectiveTypes = ['center', 'lfCenter'],
     centerDirectives = {};
 
 centerDirectiveTypes.forEach(function(directiveName) {
-    centerDirectives[directiveName] = ['leafletLogger', '$q', '$location', '$timeout', 'leafletMapDefaults', 'leafletHelpers',
-        'leafletBoundsHelpers', 'leafletMapEvents',
+    centerDirectives[directiveName] = ['leafletLogger', '$q', '$location', '$timeout', 'leafletMapDefaults',
+        'leafletHelpers', 'leafletBoundsHelpers', 'leafletMapEvents',
         function(leafletLogger, $q, $location, $timeout, leafletMapDefaults, leafletHelpers,
       leafletBoundsHelpers, leafletMapEvents) {
 

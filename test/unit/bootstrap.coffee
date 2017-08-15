@@ -6,7 +6,7 @@ afterEach ->
 beforeEach ->
     digest = (scope, fn, $timeout = ngLeafLetTestGlobals.$timeout) ->
 
-        while $timeout.hasPendingTasks()
+        while $timeout?.hasPendingTasks()
             $timeout.flush()
 
         fn() if fn?
@@ -23,7 +23,7 @@ beforeEach ->
 
             $delegate
     .run (leafletLogger) ->
-        leafletLogger.currentLevel = leafletLogger.LEVELS.info
+        leafletLogger.currentLevel = leafletLogger.LEVELS.debug
     .service 'digestor', ($timeout, $rootScope) ->
         digest: (scope = $rootScope, fn) ->
             digest(scope, fn, $timeout)
