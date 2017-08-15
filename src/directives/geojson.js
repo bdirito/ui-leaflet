@@ -37,8 +37,8 @@ angular.module('ui-leaflet')
                         onEachFeature = geojson.onEachFeature;
                     } else {
                         onEachFeature = function(feature, layer) {
-                            if (leafletHelpers.LabelPlugin.isLoaded() && isDefined(feature.properties.description)) {
-                                layer.bindLabel(feature.properties.description);
+                            if (isDefined(feature.properties) && isDefined(feature.properties.description)) {
+                                layer.bindTooltip(feature.properties.description);
                             }
 
                             leafletGeoJsonEvents.bindEvents(attrs.id, layer, null, feature,
@@ -73,6 +73,7 @@ angular.module('ui-leaflet')
                 var _addGeojson = function(geojson, maybeName){
 
                     if (!(isDefined(geojson) && isDefined(geojson.data))) {
+                        leafletData.setGeoJSON(undefined, attrs.id);
                         return;
                     }
                     var onEachFeature = _hookUpEvents(geojson, maybeName);

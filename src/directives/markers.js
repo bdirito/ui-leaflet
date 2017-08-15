@@ -99,7 +99,6 @@ angular.module('ui-leaflet').directive('markers',
                         $log.error(errorHeader + ' Received invalid data on the marker ' + newName + '.');
                         return;
                     }
-                    _setLMarker(marker, leafletMarkers, newName, maybeLayerName);
 
                     // Bind message
                     if (isDefined(model.message)) {
@@ -114,8 +113,8 @@ angular.module('ui-leaflet').directive('markers',
                     }
 
                     // Show label if defined
-                    if (Helpers.LabelPlugin.isLoaded() && isDefined(model.label) && isDefined(model.label.message)) {
-                        marker.bindLabel(model.label.message, model.label.options);
+                    if (isDefined(model.label) && isDefined(model.label.message)) {
+                        marker.bindTooltip(model.label.message, model.label.options);
                     }
 
                     // Check if the marker should be added to a layer
@@ -132,6 +131,8 @@ angular.module('ui-leaflet').directive('markers',
                             marker.openPopup();
                         }
                     }
+
+                    _setLMarker(marker, leafletMarkers, newName, maybeLayerName);
 
                     if (watchOptions.individual.type !== null) {
                         addMarkerWatcher(marker, pathToMarker, leafletScope, layers, map,

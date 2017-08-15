@@ -41,6 +41,10 @@ describe 'Directive: leaflet', ->
                         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         continuousWorld: true
             overlays:
+                layer1:
+                    name: 'layer1'
+                    type: 'group'
+                    visible: true
                 cars:
                     name: 'cars'
                     type: 'group'
@@ -53,7 +57,7 @@ describe 'Directive: leaflet', ->
     afterEach inject ($rootScope) ->
         $rootScope.$apply()
     # Marker
-    it 'should create main marker on the map', ->
+    it 'should create main marker on the map', (done) ->
         main_marker =
             lat: 0.966
             lng: 2.02
@@ -61,11 +65,13 @@ describe 'Directive: leaflet', ->
             main_marker: main_marker
         element = angular.element('<leaflet markers="markers"></leaflet>')
         element = $compile(element)($rootScope)
-        $rootScope.$digest()
-        leafletData.getMarkers().then (leafletMarkers) ->
-            leafletMainMarker = leafletMarkers.main_marker
-            expect(leafletMainMarker.getLatLng().lat).toBeCloseTo 0.966
-            expect(leafletMainMarker.getLatLng().lng).toBeCloseTo 2.02
+
+        @digest $rootScope, ->
+            leafletData.getMarkers().then (leafletMarkers) ->
+                leafletMainMarker = leafletMarkers.main_marker
+                expect(leafletMainMarker.getLatLng().lat).toBeCloseTo 0.966
+                expect(leafletMainMarker.getLatLng().lng).toBeCloseTo 2.02
+                done()
 
 
     describe 'handles common markers correctly', ->
@@ -102,39 +108,42 @@ describe 'Directive: leaflet', ->
                 lng: 2.02
 
             @testRunner = (postRunnerCb, preRunnerCb) ->
-                angular.extend $rootScope, markers:
-                    layer1:
-                        main_marker: main_marker
+                angular.extend $rootScope, {
+                    mainLayers: mainLayers
+                    markers:
+                        layer1:
+                            main_marker: main_marker
+                }
                 if preRunnerCb
                     preRunnerRet = preRunnerCb(main_marker)
                     main_marker = if preRunnerRet then preRunnerRet else main_marker
-                element = angular.element('<leaflet markers="markers" markers-nested="true"></leaflet>')
+                element = angular.element('<leaflet layers="mainLayers" markers="markers" markers-nested="true"></leaflet>')
                 element = $compile(element)($rootScope)
-                $rootScope.$digest()
-                leafletData.getMarkers().then (leafletMarkers) ->
-
-                    leafletMainMarker = leafletMarkers.layer1.main_marker
-                    if postRunnerCb
-                        postRunnerCb main_marker, leafletMainMarker
+                @digest $rootScope, ->
+                    leafletData.getMarkers().then (leafletMarkers) ->
+                        leafletMainMarker = leafletMarkers.layer1.main_marker
+                        if postRunnerCb
+                            postRunnerCb main_marker, leafletMainMarker
         afterEach ->
             self = this
             ['testRunner'].forEach (key) ->
                 delete self[key]
 
         # Marker
-        it 'should create main marker on the map', ->
+        it 'should create main marker on the map', (done) ->
             @testRunner (main_marker, leafletMainMarker) ->
                 expect(leafletMainMarker.getLatLng().lat).toBeCloseTo main_marker.lat
                 expect(leafletMainMarker.getLatLng().lng).toBeCloseTo main_marker.lng
+                done()
 
-        it 'should bind popup to main marker if message is given', ->
+        it 'should bind popup to main marker if message is given', (done) ->
             @testRunner ((main_marker, leafletMainMarker) ->
                 expect(leafletMainMarker._popup._content).toEqual main_marker.message
-
+                done()
             ), (main_marker) ->
                 angular.extend main_marker, message: 'this is paris'
 
-    it 'should bind popup to main marker if message is given', ->
+    it 'should bind popup to main marker if message is given', (done) ->
         marker =
             lat: 0.966
             lng: 2.02
@@ -143,10 +152,12 @@ describe 'Directive: leaflet', ->
             marker: marker
         element = angular.element('<leaflet markers="markers"></leaflet>')
         element = $compile(element)($rootScope)
-        $rootScope.$digest()
-        leafletData.getMarkers().then (leafletMarkers) ->
-            leafletMainMarker = leafletMarkers.marker
-            expect(leafletMainMarker._popup._content).toEqual 'this is paris'
+
+        @digest $rootScope, ->
+            leafletData.getMarkers().then (leafletMarkers) ->
+                leafletMainMarker = leafletMarkers.marker
+                expect(leafletMainMarker._popup._content).toEqual 'this is paris'
+                done()
 
     it 'message should be compiled if angular template is given', ->
         marker =
@@ -195,18 +206,7 @@ describe 'Directive: leaflet', ->
         @digest $rootScope
         expect(leafletMainMarker._popup._contentNode.innerHTML).toEqual '<p class="ng-binding">angular</p>'
 
-    it 'should bind label to main marker if message is given', ->
-        spyOn(leafletHelpers.LabelPlugin, 'isLoaded').and.returnValue true
-        L.Label = L.Class.extend(includes: L.Mixin.Events)
-        L.BaseMarkerMethods =
-            bindLabel: (content, options) ->
-                @label = new (L.Label)(options, this)
-                @label._content = content
-                this
-            updateLabelContent: (content) ->
-                @label._content = content
-
-        L.Marker.include L.BaseMarkerMethods
+    it 'should bind label to main marker if message is given', (done) ->
         marker =
             lat: 0.966
             lng: 2.02
@@ -222,25 +222,28 @@ describe 'Directive: leaflet', ->
         $rootScope.$digest()
         leafletData.getMarkers().then (leafletMarkers) ->
             leafletMainMarker = leafletMarkers.marker
-            expect(leafletMainMarker.label._content).toEqual 'original'
+            expect(leafletMainMarker.getTooltip()._content).toEqual 'original'
 
         marker.label.message = 'new'
-        $rootScope.$digest()
-        leafletData.getMarkers().then (leafletMarkers) ->
-            leafletMainMarker = leafletMarkers.marker
-            expect(leafletMainMarker.label._content).toEqual 'new'
+
+        @digest $rootScope, ->
+            leafletData.getMarkers().then (leafletMarkers) ->
+                leafletMainMarker = leafletMarkers.marker
+                expect(leafletMainMarker.getTooltip()._content).toEqual 'new'
+                done()
 
     # Markers
-    it 'should create markers on the map', ->
+    it 'should create markers on the map', (done) ->
         angular.extend $rootScope, markers: mainMarkers
         element = angular.element('<leaflet markers="markers"></leaflet>')
         element = $compile(element)($rootScope)
-        $rootScope.$digest()
-        leafletData.getMarkers().then (leafletMarkers) ->
-            expect(leafletMarkers.paris.getLatLng().lat).toBeCloseTo 0.966
-            expect(leafletMarkers.paris.getLatLng().lng).toBeCloseTo 2.02
-            expect(leafletMarkers.madrid.getLatLng().lat).toBeCloseTo 2.02
-            expect(leafletMarkers.madrid.getLatLng().lng).toBeCloseTo 4.04
+        @digest $rootScope, ->
+            leafletData.getMarkers().then (leafletMarkers) ->
+                expect(leafletMarkers.paris.getLatLng().lat).toBeCloseTo 0.966
+                expect(leafletMarkers.paris.getLatLng().lng).toBeCloseTo 2.02
+                expect(leafletMarkers.madrid.getLatLng().lat).toBeCloseTo 2.02
+                expect(leafletMarkers.madrid.getLatLng().lng).toBeCloseTo 4.04
+                done()
 
     describe 'when a marker is updated', ->
         describe 'detecting errors in lat-lng', ->

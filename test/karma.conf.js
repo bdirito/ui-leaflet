@@ -48,15 +48,12 @@ module.exports = (karma) => {
              */
             'http://pastebin.com/raw.php?i=3ZjK6LtA',
             'bower_components/leaflet.vector-markers/dist/leaflet-vector-markers.js',
+            'bower_components/leaflet-polylinedecorator/leaflet.polylineDecorator.js',
             mainLib,
             'test/unit/bootstrap.coffee',
             'test/unit/*.js',
             'test/unit/**/*.js',
-            'test/unit/**/*.coffee',
-            'bower_components/Leaflet.PolylineDecorator/leaflet.polylineDecorator.js', {
-                pattern: 'test/**/*.coffee',
-                included: false
-            }, {
+            'test/unit/**/*.coffee', {
                 pattern: 'dist/*.js.map',
                 included: false
             }
@@ -79,6 +76,10 @@ module.exports = (karma) => {
 
         // Continuous Integration mode
         // if true, it capture browsers, run tests and exit
-        singleRun: true
+        singleRun: true,
+
+        browserDisconnectTimeout : 2000, // default 2000
+        browserDisconnectTolerance : 1, // default 0
+        browserNoActivityTimeout : 60000 //default 10000
     });
 };
